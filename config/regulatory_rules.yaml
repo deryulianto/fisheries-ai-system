@@ -1,0 +1,14 @@
+fishing_seasons:
+  tuna:
+    closed_months: [1, 2]  # Jan-Feb
+  skipjack:
+    closed_months: []
+  anchovy:
+    closed_months: [6, 7]  # Jun-Jul
+
+protected_areas:
+  - name: "Marine Protected Area 1"
+    type: "no_take"
+    
+gear_restrictions:
+  prohibited: ["dynamite", "poison"]
