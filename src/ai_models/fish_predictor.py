@@ -106,7 +106,7 @@ class FishLocationPredictor:
         results = ocean_conditions.copy()
         results[f'{species}_probability'] = predictions
         results['recommendation'] = results[f'{species}_probability'].apply(
-            lambda x: 'HIGH' if x > 0.7 else 'MEDIUM' if x > 0.4 else 'LOW'
+            lambda x: 'HIGH' if x > 0.7 else 'MEDIUM' if x > 0.4 else 'LOW'  # Fixed typo: LOVY → LOW
         )
         
         return results

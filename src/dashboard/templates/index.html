@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fisheries AI Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body class="bg-gray-50">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-blue-800 mb-4">🌊 Fisheries AI System</h1>
+            <p class="text-xl text-gray-600">AI-Powered Sustainable Fishing Management</p>
+        </header>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8" id="stats-cards">
+            <!-- Stats will be loaded by JavaScript -->
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Compliance Check Panel -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-2xl font-bold mb-6 text-gray-800">📋 Compliance Check</h2>
+                <form id="compliance-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Species</label>
+                        <select name="species" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            <option value="tuna">Tuna</option>
+                            <option value="skipjack">Skipjack</option>
+                            <option value="anchovy">Anchovy</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Fishing Date</label>
+                        <input type="date" name="date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Gear Type</label>
+                        <select name="gear_type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            <option value="hand_line">Hand Line</option>
+                            <option value="long_line">Long Line</option>
+                            <option value="gill_net">Gill Net</option>
+                            <option value="purse_seine">Purse Seine</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Proposed Catch (kg)</label>
+                        <input type="number" name="proposed_catch" value="3000" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    </div>
+                    
+                    <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700">
+                        Check Compliance
+                    </button>
+                </form>
+                
+                <div id="compliance-result" class="mt-6 hidden">
+                    <!-- Results will be shown here -->
+                </div>
+            </div>
+
+            <!-- Fish Prediction Panel -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-2xl font-bold mb-6 text-gray-800">🤖 Fish Prediction</h2>
+                <form id="prediction-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Species</label>
+                        <select name="species" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            <option value="tuna">Tuna</option>
+                            <option value="skipjack">Skipjack</option>
+                        </select>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Start Date</label>
+                            <input type="date" name="start_date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">End Date</label>
+                            <input type="date" name="end_date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700">
+                        Get Predictions
+                    </button>
+                </form>
+                
+                <div id="prediction-result" class="mt-6">
+                    <!-- Results will be shown here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Predictions Chart -->
+        <div class="mt-8 bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">📈 Fishing Probability Timeline</h2>
+            <div id="prediction-chart"></div>
+        </div>
+    </div>
+
+    <script>
+        // Load dashboard stats
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/dashboard-stats');
+                const stats = await response.json();
+                
+                const statsContainer = document.getElementById('stats-cards');
+                statsContainer.innerHTML = `
+                    <div class="bg-blue-50 rounded-lg p-6">
+                        <div class="text-2xl font-bold text-blue-600">${stats.total_predictions}</div>
+                        <div class="text-gray-600">Total Predictions</div>
+                    </div>
+                    <div class="bg-green-50 rounded-lg p-6">
+                        <div class="text-2xl font-bold text-green-600">${stats.compliance_checks}</div>
+                        <div class="text-gray-600">Compliance Checks</div>
+                    </div>
+                    <div class="bg-yellow-50 rounded-lg p-6">
+                        <div class="text-2xl font-bold text-yellow-600">${Math.round(stats.avg_sustainability_score * 100)}%</div>
+                        <div class="text-gray-600">Avg Sustainability</div>
+                    </div>
+                    <div class="bg-purple-50 rounded-lg p-6">
+                        <div class="text-2xl font-bold text-purple-600">${stats.high_probability_days}</div>
+                        <div class="text-gray-600">High Probability Days</div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        // Compliance check form handler
+        document.getElementById('compliance-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+            data.location = [95.5, -5.5]; // Default location
+
+            try {
+                const response = await fetch('/api/compliance-check', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                displayComplianceResult(result);
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+
+        // Prediction form handler
+        document.getElementById('prediction-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+
+            try {
+                const response = await fetch('/api/fish-prediction', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                displayPredictionResult(result);
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+
+        function displayComplianceResult(result) {
+            const container = document.getElementById('compliance-result');
+            const status = result.approved ? '✅ APPROVED' : '❌ REJECTED';
+            const color = result.approved ? 'text-green-600' : 'text-red-600';
+            
+            container.innerHTML = `
+                <div class="border rounded-lg p-4 ${result.approved ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}">
+                    <h3 class="text-lg font-bold ${color}">${status}</h3>
+                    <p class="mt-2">Sustainability Score: <span class="font-bold">${result.sustainability_score}</span></p>
+                    ${result.violations.length > 0 ? `
+                        <div class="mt-2">
+                            <p class="font-medium">Violations:</p>
+                            <ul class="list-disc list-inside text-red-600">
+                                ${result.violations.map(v => `<li>${v}</li>`).join('')}
+                            </ul>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            container.classList.remove('hidden');
+        }
+
+        function displayPredictionResult(result) {
+            const container = document.getElementById('prediction-result');
+            
+            if (result.error) {
+                container.innerHTML = `<div class="text-red-600">Error: ${result.error}</div>`;
+                return;
+            }
+
+            let html = `
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h3 class="font-bold text-lg">Summary</h3>
+                    <p>Total days analyzed: ${result.summary.total_days}</p>
+                    <p>High probability days: ${result.summary.high_recommendations}</p>
+                    <p>Average probability: ${(result.summary.avg_probability * 100).toFixed(1)}%</p>
+                </div>
+                
+                <div class="mt-4 space-y-2 max-h-60 overflow-y-auto">
+            `;
+
+            result.predictions.forEach(pred => {
+                const badgeColor = pred.recommendation === 'HIGH' ? 'bg-green-100 text-green-800' : 
+                                 pred.recommendation === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' : 
+                                 'bg-red-100 text-red-800';
+                
+                html += `
+                    <div class="flex justify-between items-center border-b pb-2">
+                        <div>
+                            <span class="font-medium">${pred.date}</span>
+                            <span class="text-sm text-gray-500 ml-2">SST: ${pred.sst}°C</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="font-bold">${(pred.probability * 100).toFixed(1)}%</span>
+                            <span class="px-2 py-1 rounded text-xs ${badgeColor}">${pred.recommendation}</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            container.innerHTML = html;
+
+            // Update chart
+            updatePredictionChart(result.predictions);
+        }
+
+        function updatePredictionChart(predictions) {
+            const dates = predictions.map(p => p.date);
+            const probabilities = predictions.map(p => p.probability * 100);
+            const sst = predictions.map(p => p.sst);
+
+            const trace1 = {
+                x: dates,
+                y: probabilities,
+                type: 'scatter',
+                mode: 'lines+markers',
+                name: 'Fish Probability (%)',
+                line: { color: 'blue' }
+            };
+
+            const trace2 = {
+                x: dates,
+                y: sst,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'SST (°C)',
+                yaxis: 'y2',
+                line: { color: 'red' }
+            };
+
+            const layout = {
+                title: 'Fishing Probability & Sea Surface Temperature',
+                yaxis: { title: 'Probability (%)' },
+                yaxis2: {
+                    title: 'SST (°C)',
+                    overlaying: 'y',
+                    side: 'right'
+                }
+            };
+
+            Plotly.newPlot('prediction-chart', [trace1, trace2], layout);
+        }
+
+        // Set default dates
+        window.addEventListener('load', () => {
+            const today = new Date().toISOString().split('T')[0];
+            const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+            
+            document.querySelector('input[name="date"]').value = today;
+            document.querySelector('input[name="start_date"]').value = today;
+            document.querySelector('input[name="end_date"]').value = nextWeek;
+            
+            loadStats();
+        });
+    </script>
+</body>
+</html>
